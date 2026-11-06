@@ -4,11 +4,12 @@ import { env } from './env.js';
 export const connectDB = async () => {
   try {
     const conn = await mongoose.connect(env.MONGODB_URI, {
+      dbName: 'softoria_technologies',
       serverSelectionTimeoutMS: 8000,
       connectTimeoutMS: 10000
     });
 
-    console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Atlas Connected: ${conn.connection.host} [Database: ${conn.connection.name}]`);
     return conn;
   } catch (error) {
     console.error(`❌ MongoDB Connection Failed: ${error.message}`);

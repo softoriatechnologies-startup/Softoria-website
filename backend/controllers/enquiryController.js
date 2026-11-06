@@ -90,6 +90,35 @@ export const createEnquiry = async (req, res) => {
       enquiryId: newEnquiry._id
     });
   } catch (error) {
+    // Handle concurrent race condition for duplicate clientSubmissionId (MongoDB E11000)
+    const isClientSubmissionDuplicate =
+      error.code === 11000 &&
+      Boolean(
+        error.keyPattern?.clientSubmissionId ||
+        error.keyValue?.clientSubmissionId !== undefined ||
+        (typeof error.message === 'string' && error.message.includes('clientSubmissionId'))
+      );
+
+    if (isClientSubmissionDuplicate && req.body.clientSubmissionId) {
+      try {
+        const sanitizedId = String(req.body.clientSubmissionId).trim().slice(0, 64);
+        if (sanitizedId) {
+          const existing = await Enquiry.findOne({ clientSubmissionId: sanitizedId });
+          if (existing) {
+            console.log(`ℹ️ [Enquiry Controller] Concurrent duplicate resolved for submission ID: ${sanitizedId} (${Date.now() - startTime}ms)`);
+            return res.status(200).json({
+              success: true,
+              message: 'Enquiry successfully registered with Softoria Technologies.',
+              enquiryId: existing._id,
+              idempotent: true
+            });
+          }
+        }
+      } catch (lookupErr) {
+        // Fall through to standard error handling
+      }
+    }
+
     console.error(`❌ [Enquiry Controller] Error processing enquiry (${Date.now() - startTime}ms):`, error.message);
 
     if (error.name === 'ValidationError') {

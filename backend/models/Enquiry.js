@@ -106,7 +106,13 @@ const enquirySchema = new mongoose.Schema(
 enquirySchema.index({ status: 1, createdAt: -1 });
 enquirySchema.index({ service: 1 });
 enquirySchema.index({ email: 1 });
-enquirySchema.index({ clientSubmissionId: 1 }, { sparse: true });
+enquirySchema.index(
+  { clientSubmissionId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { clientSubmissionId: { $type: 'string' } }
+  }
+);
 
 export const Enquiry = mongoose.model('Enquiry', enquirySchema);
 
