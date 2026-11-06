@@ -14,13 +14,18 @@ const app = express();
 // Security Middlewares
 app.use(helmet());
 
-// CORS Configuration — supports local development on port 5173 and optional FRONTEND_URL
+// CORS Configuration — supports local development on port 5173 and comma-separated production origins
+const frontendUrls = (env.FRONTEND_URL || '')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
-  env.FRONTEND_URL
-].filter(Boolean);
+  ...frontendUrls
+];
 
 app.use(
   cors({
