@@ -10,7 +10,18 @@ const escapeRegex = (str) => {
 };
 
 export const createEnquiry = async (req, res) => {
+  const startTime = Date.now();
+
   try {
+    // Fast database readiness check to prevent hanging if connection drops
+    if (mongoose.connection.readyState !== 1) {
+      console.warn('⚠️ [Enquiry Controller] Database not connected. Current readyState:', mongoose.connection.readyState);
+      return res.status(503).json({
+        success: false,
+        message: 'Database service is temporarily unavailable. Please try again in a few moments.'
+      });
+    }
+
     const {
       fullName,
       email,
@@ -20,11 +31,13 @@ export const createEnquiry = async (req, res) => {
       projectBudget,
       projectDescription,
       source,
+      clientSubmissionId,
       website_url_check // Honeypot field
     } = req.body;
 
     // Honeypot check: Bots fill hidden fields
     if (website_url_check && website_url_check.trim() !== '') {
+      console.warn('⚠️ [Enquiry Controller] Honeypot field triggered from IP:', req.ip);
       return res.status(400).json({
         success: false,
         message: 'Suspicious submission activity detected.'
@@ -39,6 +52,21 @@ export const createEnquiry = async (req, res) => {
       });
     }
 
+    // Idempotency check: if clientSubmissionId was provided, check if already recorded
+    if (clientSubmissionId && typeof clientSubmissionId === 'string' && clientSubmissionId.trim()) {
+      const sanitizedSubmissionId = clientSubmissionId.trim().slice(0, 64);
+      const existingEnquiry = await Enquiry.findOne({ clientSubmissionId: sanitizedSubmissionId });
+      if (existingEnquiry) {
+        console.log(`ℹ️ [Enquiry Controller] Idempotent duplicate replayed for submission ID: ${sanitizedSubmissionId} (${Date.now() - startTime}ms)`);
+        return res.status(200).json({
+          success: true,
+          message: 'Enquiry successfully registered with Softoria Technologies.',
+          enquiryId: existingEnquiry._id,
+          idempotent: true
+        });
+      }
+    }
+
     const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress;
 
     const newEnquiry = await Enquiry.create({
@@ -50,8 +78,11 @@ export const createEnquiry = async (req, res) => {
       projectBudget: projectBudget ? projectBudget.trim() : '',
       projectDescription: projectDescription ? projectDescription.trim() : '',
       source: source || 'contact_page',
+      clientSubmissionId: clientSubmissionId && typeof clientSubmissionId === 'string' ? clientSubmissionId.trim().slice(0, 64) : undefined,
       ipAddress
     });
+
+    console.log(`✅ [Enquiry Controller] Enquiry persisted [ID: ${newEnquiry._id}] for service "${service}" (${Date.now() - startTime}ms)`);
 
     return res.status(201).json({
       success: true,
@@ -59,7 +90,7 @@ export const createEnquiry = async (req, res) => {
       enquiryId: newEnquiry._id
     });
   } catch (error) {
-    console.error('Error creating enquiry:', error);
+    console.error(`❌ [Enquiry Controller] Error processing enquiry (${Date.now() - startTime}ms):`, error.message);
 
     if (error.name === 'ValidationError') {
       const messages = Object.values(error.errors).map((e) => e.message);

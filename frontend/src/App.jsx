@@ -4,6 +4,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import AutoEnquiryPopup from './components/enquiry/AutoEnquiryPopup';
 import { useEnquiryPopup } from './hooks/useEnquiryPopup';
+import { enquiryService } from './services/enquiryService';
 
 // Pages
 import Home from './pages/Home';
@@ -32,6 +33,11 @@ function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Silent non-blocking backend warmup on initial application load (wakes up dormant cloud instances)
+  useEffect(() => {
+    enquiryService.warmupBackend();
+  }, []);
 
   // Secret admin shortcut: Ctrl + Shift + A (or Cmd + Shift + A)
   useEffect(() => {

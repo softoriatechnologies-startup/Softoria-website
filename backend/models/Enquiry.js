@@ -89,6 +89,12 @@ const enquirySchema = new mongoose.Schema(
     ipAddress: {
       type: String,
       select: false
+    },
+    clientSubmissionId: {
+      type: String,
+      trim: true,
+      maxlength: [64, 'Client submission ID cannot exceed 64 characters'],
+      default: null
     }
   },
   {
@@ -96,10 +102,11 @@ const enquirySchema = new mongoose.Schema(
   }
 );
 
-// Indexes for fast lookup & filtering in Admin Dashboard
+// Indexes for fast lookup, idempotency & filtering in Admin Dashboard
 enquirySchema.index({ status: 1, createdAt: -1 });
 enquirySchema.index({ service: 1 });
 enquirySchema.index({ email: 1 });
+enquirySchema.index({ clientSubmissionId: 1 }, { sparse: true });
 
 export const Enquiry = mongoose.model('Enquiry', enquirySchema);
 

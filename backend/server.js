@@ -14,32 +14,41 @@ const app = express();
 // Security Middlewares
 app.use(helmet());
 
-// CORS Configuration — supports local development on port 5173 and comma-separated production origins
+// CORS Configuration — supports local development, verified Netlify production, and normalized FRONTEND_URL
+const normalizeOrigin = (url) => (url ? url.trim().replace(/\/+$/, '') : '');
+
 const frontendUrls = (env.FRONTEND_URL || '')
   .split(',')
-  .map((url) => url.trim())
+  .map(normalizeOrigin)
   .filter(Boolean);
 
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   'http://localhost:3000',
+  'https://cheerful-chimera-830f66.netlify.app',
   ...frontendUrls
 ];
 
 app.use(
   cors({
     origin: (origin, callback) => {
-      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server) during development
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Cross-Origin Request Blocked by Softoria CORS Policy'));
+      // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+      if (!origin) {
+        return callback(null, true);
       }
+
+      const cleanOrigin = normalizeOrigin(origin);
+      if (allowedOrigins.includes(cleanOrigin)) {
+        return callback(null, true);
+      }
+
+      // Disallow origin cleanly without throwing unhandled 500 error
+      return callback(null, false);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
   })
 );
 

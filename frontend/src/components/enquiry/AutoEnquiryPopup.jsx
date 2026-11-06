@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X, CheckCircle2, AlertCircle, Sparkles, Send } from 'lucide-react';
 import { validateEnquiryForm } from '../../utils/validation';
 import { enquiryService } from '../../services/enquiryService';
 import { COMPANY_CONFIG } from '../../config/companyConfig';
 import Button from '../common/Button';
 
+const generateSubmissionId = () => `softoria_popup_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+
 export default function AutoEnquiryPopup({ isOpen, onClose, onSubmitted, initialService = '' }) {
+  const submissionIdRef = useRef(generateSubmissionId());
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -18,6 +21,7 @@ export default function AutoEnquiryPopup({ isOpen, onClose, onSubmitted, initial
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -68,7 +72,10 @@ export default function AutoEnquiryPopup({ isOpen, onClose, onSubmitted, initial
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate rapid clicks
+
     setServerError('');
+    setSlowNotice(false);
 
     const validationErrors = validateEnquiryForm(formData);
     if (Object.keys(validationErrors).length > 0) {
@@ -78,19 +85,35 @@ export default function AutoEnquiryPopup({ isOpen, onClose, onSubmitted, initial
 
     setIsSubmitting(true);
 
+    // Show reassuring message if server takes longer than 4s
+    const slowTimer = setTimeout(() => {
+      setSlowNotice(true);
+    }, 4000);
+
     try {
       await enquiryService.submitEnquiry({
         ...formData,
+        clientSubmissionId: submissionIdRef.current,
         source: 'popup'
       });
 
       setSubmitSuccess(true);
+      submissionIdRef.current = generateSubmissionId(); // Renew submission token for legitimate next inquiry
       if (onSubmitted) onSubmitted();
     } catch (err) {
       console.error('Enquiry submission error:', err);
-      const msg = err.response?.data?.message || 'Unable to submit enquiry right now. Please verify your connection or try again.';
+      let msg = err.response?.data?.message;
+      if (!msg) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          msg = 'Server connection timed out during startup. Please click submit again to proceed.';
+        } else {
+          msg = 'Unable to submit enquiry right now. Please verify your connection or try again.';
+        }
+      }
       setServerError(msg);
     } finally {
+      clearTimeout(slowTimer);
+      setSlowNotice(false);
       setIsSubmitting(false);
     }
   };
@@ -311,11 +334,17 @@ export default function AutoEnquiryPopup({ isOpen, onClose, onSubmitted, initial
                   variant="primary"
                   size="md"
                   isLoading={isSubmitting}
+                  disabled={isSubmitting}
                   className="w-full justify-center shadow-gold-sm"
                   icon={Send}
                 >
                   Submit Project Enquiry
                 </Button>
+                {isSubmitting && slowNotice && (
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2 text-center">
+                    Connecting to secure server... Please allow a few seconds while your enquiry is processed.
+                  </p>
+                )}
                 <p className="text-[11px] text-center text-gray-400 mt-2">
                   🔒 We respect your privacy. No spam. Direct technical reply.
                 </p>

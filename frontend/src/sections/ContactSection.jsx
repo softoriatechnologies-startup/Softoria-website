@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import { COMPANY_CONFIG } from '../config/companyConfig';
 import { validateEnquiryForm } from '../utils/validation';
 import { enquiryService } from '../services/enquiryService';
+
+const generateSubmissionId = () => `softoria_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
 
 const BUDGET_RANGES = [
   'Under 5,000 / Flexible',
@@ -16,6 +18,7 @@ const BUDGET_RANGES = [
 ];
 
 export default function ContactSection({ initialService = '' }) {
+  const submissionIdRef = useRef(generateSubmissionId());
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -29,6 +32,7 @@ export default function ContactSection({ initialService = '' }) {
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [slowNotice, setSlowNotice] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [serverError, setServerError] = useState('');
 
@@ -43,7 +47,10 @@ export default function ContactSection({ initialService = '' }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return; // Prevent duplicate rapid submissions
+
     setServerError('');
+    setSlowNotice(false);
 
     const validationErrors = validateEnquiryForm(formData);
     if (Object.keys(validationErrors).length > 0) {
@@ -53,13 +60,20 @@ export default function ContactSection({ initialService = '' }) {
 
     setIsSubmitting(true);
 
+    // Show reassuring message if server takes longer than 4s (e.g. dormant container waking up)
+    const slowTimer = setTimeout(() => {
+      setSlowNotice(true);
+    }, 4000);
+
     try {
       await enquiryService.submitEnquiry({
         ...formData,
+        clientSubmissionId: submissionIdRef.current,
         source: 'contact_page'
       });
 
       setSubmitSuccess(true);
+      submissionIdRef.current = generateSubmissionId(); // Renew submission token for legitimate next inquiry
       setFormData({
         fullName: '',
         email: '',
@@ -72,9 +86,18 @@ export default function ContactSection({ initialService = '' }) {
       });
     } catch (err) {
       console.error('Contact submission error:', err);
-      const msg = err.response?.data?.message || 'Unable to submit enquiry right now. Please verify your connection or try again.';
+      let msg = err.response?.data?.message;
+      if (!msg) {
+        if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+          msg = 'Server connection timed out during startup. Please click submit again to proceed.';
+        } else {
+          msg = 'Unable to submit enquiry right now. Please verify your connection or try again.';
+        }
+      }
       setServerError(msg);
     } finally {
+      clearTimeout(slowTimer);
+      setSlowNotice(false);
       setIsSubmitting(false);
     }
   };
@@ -205,7 +228,10 @@ export default function ContactSection({ initialService = '' }) {
                 <div className="pt-4">
                   <Button
                     variant="primary"
-                    onClick={() => setSubmitSuccess(false)}
+                    onClick={() => {
+                      submissionIdRef.current = generateSubmissionId();
+                      setSubmitSuccess(false);
+                    }}
                   >
                     Submit Another Inquiry
                   </Button>
@@ -376,11 +402,17 @@ export default function ContactSection({ initialService = '' }) {
                     variant="primary"
                     size="lg"
                     isLoading={isSubmitting}
+                    disabled={isSubmitting}
                     className="w-full justify-center"
                     icon={Send}
                   >
                     Submit Project Inquiry
                   </Button>
+                  {isSubmitting && slowNotice && (
+                    <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2.5 mt-2.5 text-center">
+                      Connecting to secure server... Please allow a few seconds while your enquiry is processed.
+                    </p>
+                  )}
                 </div>
               </form>
             )}
