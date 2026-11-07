@@ -43,7 +43,7 @@ export const COMPANY_CONFIG = {
     location: 'Madurai, Tamil Nadu, India',
     officeAvailability: '24 Hours / 7 Days',
     workingHours: '24 Hours / 7 Days',
-    websiteUrl: 'https://softoria.com'
+    websiteUrl: 'https://cheerful-chimera-830f66.netlify.app'
   },
 
   // Social Media Links (Leave empty to cleanly hide icons until official URLs are set)

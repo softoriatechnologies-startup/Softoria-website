@@ -29,6 +29,53 @@ function ScrollToTop() {
   return null;
 }
 
+// Route-aware canonical URL manager for public pages
+function CanonicalManager() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const PUBLIC_CANONICAL_BASE = 'https://cheerful-chimera-830f66.netlify.app';
+    const CANONICAL_PUBLIC_ROUTES = new Set([
+      '/',
+      '/about',
+      '/services',
+      '/technologies',
+      '/contact',
+      '/privacy-policy',
+      '/terms-and-conditions'
+    ]);
+
+    // Strip trailing slashes; query parameters and URL fragments are excluded by pathname
+    const normalizedPath = pathname.length > 1 && pathname.endsWith('/')
+      ? pathname.replace(/\/+$/, '')
+      : pathname;
+
+    const existingTag = document.querySelector('link[rel="canonical"]');
+
+    if (CANONICAL_PUBLIC_ROUTES.has(normalizedPath)) {
+      const canonicalUrl = normalizedPath === '/'
+        ? `${PUBLIC_CANONICAL_BASE}/`
+        : `${PUBLIC_CANONICAL_BASE}${normalizedPath}`;
+
+      if (existingTag) {
+        existingTag.setAttribute('href', canonicalUrl);
+      } else {
+        const newTag = document.createElement('link');
+        newTag.setAttribute('rel', 'canonical');
+        newTag.setAttribute('href', canonicalUrl);
+        document.head.appendChild(newTag);
+      }
+    } else {
+      // Exclude admin routes and unlisted paths from public canonical handling
+      if (existingTag) {
+        existingTag.remove();
+      }
+    }
+  }, [pathname]);
+
+  return null;
+}
+
 function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -62,6 +109,7 @@ function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <ScrollToTop />
+      <CanonicalManager />
       
       {/* Standard Public Navigation */}
       <Navbar onStartProject={openPopup} />
