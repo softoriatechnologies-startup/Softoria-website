@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer';
 import AutoEnquiryPopup from './components/enquiry/AutoEnquiryPopup';
 import { useEnquiryPopup } from './hooks/useEnquiryPopup';
 import { enquiryService } from './services/enquiryService';
+import { ROUTE_SEO_METADATA, SEO_BASE_URL, normalizePathname } from './config/seoConfig';
 
 // Pages
 import Home from './pages/Home';
@@ -29,47 +30,91 @@ function ScrollToTop() {
   return null;
 }
 
-// Route-aware canonical URL manager for public pages
-function CanonicalManager() {
+// DOM helpers for safe in-place metadata updates without tag duplication
+const setMetaTag = (attrName, attrValue, content) => {
+  let element = document.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (!element) {
+    element = document.createElement('meta');
+    element.setAttribute(attrName, attrValue);
+    document.head.appendChild(element);
+  }
+  element.setAttribute('content', content);
+};
+
+const removeMetaTag = (attrName, attrValue) => {
+  const element = document.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (element) {
+    element.remove();
+  }
+};
+
+const setCanonical = (href) => {
+  let element = document.querySelector('link[rel="canonical"]');
+  if (!element) {
+    element = document.createElement('link');
+    element.setAttribute('rel', 'canonical');
+    document.head.appendChild(element);
+  }
+  element.setAttribute('href', href);
+};
+
+const removeCanonical = () => {
+  const element = document.querySelector('link[rel="canonical"]');
+  if (element) {
+    element.remove();
+  }
+};
+
+// Route-aware SEO and canonical metadata manager
+function SeoManager() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const PUBLIC_CANONICAL_BASE = 'https://cheerful-chimera-830f66.netlify.app';
-    const CANONICAL_PUBLIC_ROUTES = new Set([
-      '/',
-      '/about',
-      '/services',
-      '/technologies',
-      '/contact',
-      '/privacy-policy',
-      '/terms-and-conditions'
-    ]);
+    const normalizedPath = normalizePathname(pathname);
+    const metadata = ROUTE_SEO_METADATA[normalizedPath];
 
-    // Strip trailing slashes; query parameters and URL fragments are excluded by pathname
-    const normalizedPath = pathname.length > 1 && pathname.endsWith('/')
-      ? pathname.replace(/\/+$/, '')
-      : pathname;
+    if (metadata) {
+      // 1. Remove noindex restriction if previously on admin route
+      removeMetaTag('name', 'robots');
 
-    const existingTag = document.querySelector('link[rel="canonical"]');
+      // 2. Set document title
+      document.title = metadata.title;
 
-    if (CANONICAL_PUBLIC_ROUTES.has(normalizedPath)) {
+      // 3. Set meta description
+      setMetaTag('name', 'description', metadata.description);
+
+      // 4. Set Open Graph metadata
+      setMetaTag('property', 'og:title', metadata.ogTitle || metadata.title);
+      setMetaTag('property', 'og:description', metadata.ogDescription || metadata.description);
       const canonicalUrl = normalizedPath === '/'
-        ? `${PUBLIC_CANONICAL_BASE}/`
-        : `${PUBLIC_CANONICAL_BASE}${normalizedPath}`;
+        ? `${SEO_BASE_URL}/`
+        : `${SEO_BASE_URL}${normalizedPath}`;
+      setMetaTag('property', 'og:url', canonicalUrl);
 
-      if (existingTag) {
-        existingTag.setAttribute('href', canonicalUrl);
-      } else {
-        const newTag = document.createElement('link');
-        newTag.setAttribute('rel', 'canonical');
-        newTag.setAttribute('href', canonicalUrl);
-        document.head.appendChild(newTag);
-      }
+      // 5. Set Twitter Card metadata
+      setMetaTag('name', 'twitter:title', metadata.twitterTitle || metadata.title);
+      setMetaTag('name', 'twitter:description', metadata.twitterDescription || metadata.description);
+
+      // 6. Set route canonical link
+      setCanonical(canonicalUrl);
+    } else if (pathname.startsWith('/admin')) {
+      // Admin Routes: prevent public metadata leaking & enforce noindex
+      document.title = pathname.includes('dashboard')
+        ? 'Admin Dashboard | Softoria Technologies'
+        : 'Admin Login | Softoria Technologies';
+
+      setMetaTag('name', 'robots', 'noindex, nofollow');
+      removeMetaTag('name', 'description');
+      removeMetaTag('property', 'og:title');
+      removeMetaTag('property', 'og:description');
+      removeMetaTag('property', 'og:url');
+      removeMetaTag('name', 'twitter:title');
+      removeMetaTag('name', 'twitter:description');
+      removeCanonical();
     } else {
-      // Exclude admin routes and unlisted paths from public canonical handling
-      if (existingTag) {
-        existingTag.remove();
-      }
+      // 404 or unlisted routes: remove canonical and set generic title
+      document.title = 'Page Not Found | Softoria Technologies';
+      removeCanonical();
     }
   }, [pathname]);
 
@@ -109,7 +154,7 @@ function MainLayout() {
   return (
     <div className="flex flex-col min-h-screen bg-white">
       <ScrollToTop />
-      <CanonicalManager />
+      <SeoManager />
       
       {/* Standard Public Navigation */}
       <Navbar onStartProject={openPopup} />

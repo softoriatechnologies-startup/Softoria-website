@@ -1,6 +1,5 @@
 User-agent: *
 Allow: /
-Disallow: /admin/
 Disallow: /api/
 
 Sitemap: https://cheerful-chimera-830f66.netlify.app/sitemap.xml
