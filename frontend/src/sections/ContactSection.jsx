@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
+import { Mail, Phone, MapPin, Send, CheckCircle2, AlertCircle, Clock, MessageSquare } from 'lucide-react';
 import Badge from '../components/common/Badge';
 import Button from '../components/common/Button';
 import { COMPANY_CONFIG } from '../config/companyConfig';
@@ -171,6 +171,39 @@ export default function ContactSection({ initialService = '' }) {
                       className="hover:text-softoria-gold transition-colors"
                     >
                       {COMPANY_CONFIG.contact.phone2}
+                    </a>
+                  </p>
+                </div>
+              </div>
+
+              {/* WhatsApp Direct Chat */}
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-softoria-gold/15 flex items-center justify-center text-softoria-gold shrink-0 mt-0.5">
+                  <MessageSquare className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-softoria-greyLight">
+                    WhatsApp Chat
+                  </h4>
+                  <p className="text-sm font-semibold text-softoria-black mt-0.5 flex items-center gap-1.5 flex-wrap">
+                    <a
+                      href={COMPANY_CONFIG.contact.whatsapp1Url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-softoria-gold transition-colors"
+                      aria-label={`Chat on WhatsApp at ${COMPANY_CONFIG.contact.whatsapp1}`}
+                    >
+                      {COMPANY_CONFIG.contact.whatsapp1}
+                    </a>
+                    <span className="text-gray-400 font-normal">/</span>
+                    <a
+                      href={COMPANY_CONFIG.contact.whatsapp2Url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-softoria-gold transition-colors"
+                      aria-label={`Chat on WhatsApp at ${COMPANY_CONFIG.contact.whatsapp2}`}
+                    >
+                      {COMPANY_CONFIG.contact.whatsapp2}
                     </a>
                   </p>
                 </div>

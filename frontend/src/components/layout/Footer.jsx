@@ -85,7 +85,7 @@ export default function Footer() {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-9 h-9 rounded-lg bg-softoria-greyDark border border-softoria-greyMedium flex items-center justify-center text-gray-300 hover:text-softoria-gold hover:border-softoria-gold transition-colors"
-                        aria-label={`Visit Softoria on ${social.name}`}
+                        aria-label={social.name === 'WhatsApp' ? 'Chat with Softoria on WhatsApp' : `Visit Softoria on ${social.name}`}
                       >
                         <IconComponent className="w-4 h-4" />
                       </a>
@@ -183,6 +183,30 @@ export default function Footer() {
                     className="text-gray-300 hover:text-softoria-gold transition-colors"
                   >
                     {COMPANY_CONFIG.contact.phone2}
+                  </a>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5 text-gray-400">
+                <MessageSquare className="w-4 h-4 text-softoria-gold shrink-0 mt-0.5" />
+                <div className="flex items-center gap-1.5 flex-wrap text-sm">
+                  <a
+                    href={COMPANY_CONFIG.contact.whatsapp1Url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-300 hover:text-softoria-gold transition-colors"
+                    aria-label={`Chat on WhatsApp with Softoria at ${COMPANY_CONFIG.contact.whatsapp1}`}
+                  >
+                    {COMPANY_CONFIG.contact.whatsapp1}
+                  </a>
+                  <span className="text-gray-500">/</span>
+                  <a
+                    href={COMPANY_CONFIG.contact.whatsapp2Url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-300 hover:text-softoria-gold transition-colors"
+                    aria-label={`Chat on WhatsApp with Softoria at ${COMPANY_CONFIG.contact.whatsapp2}`}
+                  >
+                    {COMPANY_CONFIG.contact.whatsapp2}
                   </a>
                 </div>
               </div>

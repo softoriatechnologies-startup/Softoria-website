@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ArrowRight, Phone, Mail } from 'lucide-react';
+import { Menu, X, ArrowRight, Phone, Mail, MessageSquare } from 'lucide-react';
 import { COMPANY_CONFIG } from '../../config/companyConfig';
 import Button from '../common/Button';
 
@@ -175,6 +175,30 @@ export default function Navbar({ onStartProject }) {
                       className="hover:text-softoria-gold transition-colors font-semibold"
                     >
                       {COMPANY_CONFIG.contact.phone2}
+                    </a>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 font-medium text-softoria-black">
+                  <MessageSquare className="w-3.5 h-3.5 text-softoria-gold shrink-0" />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <a
+                      href={COMPANY_CONFIG.contact.whatsapp1Url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-softoria-gold transition-colors font-semibold"
+                      aria-label={`Chat on WhatsApp at ${COMPANY_CONFIG.contact.whatsapp1}`}
+                    >
+                      {COMPANY_CONFIG.contact.whatsapp1}
+                    </a>
+                    <span className="text-gray-400 font-normal">/</span>
+                    <a
+                      href={COMPANY_CONFIG.contact.whatsapp2Url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:text-softoria-gold transition-colors font-semibold"
+                      aria-label={`Chat on WhatsApp at ${COMPANY_CONFIG.contact.whatsapp2}`}
+                    >
+                      {COMPANY_CONFIG.contact.whatsapp2}
                     </a>
                   </div>
                 </div>

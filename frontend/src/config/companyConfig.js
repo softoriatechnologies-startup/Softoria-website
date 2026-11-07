@@ -36,6 +36,10 @@ export const COMPANY_CONFIG = {
     secondaryPhoneTel: '+917010911745',
     phone: '9524049732',
     whatsapp: 'https://wa.me/919524049732',
+    whatsapp1: '+91 95240 49732',
+    whatsapp1Url: 'https://wa.me/919524049732',
+    whatsapp2: '+91 70109 11745',
+    whatsapp2Url: 'https://wa.me/917010911745',
     location: 'Madurai, Tamil Nadu, India',
     officeAvailability: '24 Hours / 7 Days',
     workingHours: '24 Hours / 7 Days',
@@ -44,12 +48,12 @@ export const COMPANY_CONFIG = {
 
   // Social Media Links (Leave empty to cleanly hide icons until official URLs are set)
   socialLinks: {
-    linkedin: '', // Set when provided: e.g. 'https://www.linkedin.com/company/softoria-technologies'
-    instagram: '', // Set when provided: e.g. 'https://www.instagram.com/softoriatech'
+    linkedin: 'https://www.linkedin.com/in/softoria-technologies-9a4452448/',
+    instagram: 'https://www.instagram.com/softoriatech/',
     facebook: '', // Set when provided: e.g. 'https://www.facebook.com/softoriatech'
     github: '', // Set when provided: e.g. 'https://github.com/softoria-technologies'
     youtube: '', // Set when provided: e.g. 'https://www.youtube.com/@softoriatech'
-    whatsapp: '' // Set when provided
+    whatsapp: 'https://wa.me/919524049732'
   },
 
   // Core Services List
