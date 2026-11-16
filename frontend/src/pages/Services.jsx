@@ -2,6 +2,7 @@ import React from 'react';
 import Badge from '../components/common/Badge';
 import ServicesSection from '../sections/ServicesSection';
 import ProcessSection from '../sections/ProcessSection';
+import FaqSection from '../sections/FaqSection';
 import CtaBannerSection from '../sections/CtaBannerSection';
 import { COMPANY_CONFIG } from '../config/companyConfig';
 
@@ -26,6 +27,9 @@ export default function Services({ onOpenPopup }) {
 
       {/* Development Lifecycle */}
       <ProcessSection />
+
+      {/* Frequently Asked Questions */}
+      <FaqSection onOpenPopup={onOpenPopup} />
 
       {/* CTA */}
       <CtaBannerSection onStartProject={onOpenPopup} />

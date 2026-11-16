@@ -5,6 +5,7 @@ import ServicesSection from '../sections/ServicesSection';
 import WhyChooseUsSection from '../sections/WhyChooseUsSection';
 import TechnologiesSection from '../sections/TechnologiesSection';
 import ProcessSection from '../sections/ProcessSection';
+import FaqSection from '../sections/FaqSection';
 import CtaBannerSection from '../sections/CtaBannerSection';
 import ContactSection from '../sections/ContactSection';
 
@@ -52,6 +53,11 @@ export default function Home({ onOpenPopup }) {
       <TechnologiesSection />
       
       <ProcessSection />
+      
+      <FaqSection 
+        limit={6} 
+        onOpenPopup={onOpenPopup || scrollToContact} 
+      />
       
       <CtaBannerSection onStartProject={onOpenPopup || scrollToContact} />
       
